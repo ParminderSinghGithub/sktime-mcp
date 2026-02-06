@@ -1,138 +1,128 @@
-# User Guide
+# 📘 User Guide
 
-This guide walks through prerequisites, installation, first-time use, and continuous usage patterns for sktime-mcp.
+Welcome to the **sktime-mcp** User Guide. This comprehensive manual will help you understand how to install, configure, and master the Model Context Protocol (MCP) server for time-series forecasting.
 
-## Prerequisites
+---
 
-- Python 3.9+
-- pip
-- Optional extras based on your needs:
-  - SQL databases: `.[sql]`
-  - Excel/Parquet files: `.[files]`
-  - Forecasting extras: `.[forecasting]`
-  - Deep learning models: `.[dl]`
+## 🚀 Getting Started
 
-## Installation
+### Prerequisites
+
+Before you begin, ensure you have:
+
+- **Python 3.9+** installed.
+- **pip** package manager.
+- A compatible MCP Client (like **Claude Desktop**).
+
+### Installation
+
+Install the package directly from the source. We recommend installing with all dependencies to unlock full functionality.
 
 ```bash
+# Standard installation
 pip install -e .
+
+# Recommended: Install with all optional extras (SQL, Forecasting, Files)
+pip install -e ".[all]"
 ```
 
-Optional extras:
+### Running the Server
 
-```bash
-pip install -e ".[sql]"
-pip install -e ".[files]"
-pip install -e ".[forecasting]"
-pip install -e ".[dl]"
-```
-
-## Run The Server
+Start the MCP server to begin listening for connections:
 
 ```bash
 sktime-mcp
 ```
 
-or
-
+*Or manually via Python:*
 ```bash
 python -m sktime_mcp.server
 ```
 
-## Core Tooling (What The LLM Uses)
+!!! tip "Client Configuration"
+    Ensure your MCP client (e.g., Claude Desktop) is configured to run this command. See the [README](index.md) for configuration examples.
 
-Discovery and inspection:
+---
 
-- `list_estimators` (filter by task and tags)
-- `search_estimators` (search by name or docstring)
-- `describe_estimator` (capabilities, hyperparameters)
-- `get_available_tags` (list tag keys)
+## 🛠️ Core Capabilities
 
-Instantiation and execution:
+The `sktime-mcp` server exposes a suite of tools designed for Large Language Models to interact with time-series data.
 
-- `instantiate_estimator`
-- `instantiate_pipeline`
-- `validate_pipeline`
-- `fit_predict`
-- `fit` and `predict` (explicit lifecycle)
-- `export_code` (reproducible Python)
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **Discovery** | `list_estimators`, `search_estimators`, `describe_estimator` | Find the right model for your task (Forecasting, Classification, etc.). |
+| **Instantiation** | `instantiate_estimator`, `instantiate_pipeline` | Create model instances or complex pipelines. |
+| **Execution** | `fit_predict`, `fit`, `predict` | Train models and generate forecasts. |
+| **Data** | `load_data_source`, `list_datasets` | Load data from Pandas, CSV/Parquet, or SQL. |
+| **Export** | `export_code` | Generate Python code to reproduce your results. |
 
-Data loading and cleanup:
+---
 
-- `load_data_source`
-- `list_data_sources`
-- `fit_predict_with_data`
-- `list_data_handles`
-- `release_data_handle`
+## ⚡ Workflows
 
-Data formatting:
+### 1. The "Hello World" of Forecasting
 
-- `format_time_series`
-- `auto_format_on_load`
+Standard workflow for forecasting on a demo dataset.
 
-## First-Time Workflow (End-to-End)
-
-1. Discover datasets
-
+**Step 1: Discover Data**
 ```json
 {"tool": "list_datasets", "arguments": {}}
 ```
 
-2. Find an estimator (example: forecasting)
-
+**Step 2: Find a Forecaster**
 ```json
-{"tool": "list_estimators", "arguments": {"task": "forecasting", "limit": 10}}
+{"tool": "list_estimators", "arguments": {"task": "forecasting", "limit": 5}}
 ```
 
-3. Inspect a candidate
-
-```json
-{"tool": "describe_estimator", "arguments": {"estimator": "NaiveForecaster"}}
-```
-
-4. Instantiate the estimator
-
-```json
-{
-  "tool": "instantiate_estimator",
-  "arguments": {"estimator": "NaiveForecaster", "params": {"strategy": "last", "sp": 12}}
-}
-```
-
-5. Fit and predict using demo data
-
+**Step 3: Instantiate & Run**
 ```json
 {
   "tool": "fit_predict",
-  "arguments": {"estimator_handle": "est_abc123", "dataset": "airline", "horizon": 12}
-}
-```
-
-6. Export a reproducible code snippet
-
-```json
-{"tool": "export_code", "arguments": {"handle": "est_abc123", "var_name": "model"}}
-```
-
-## Working With Your Own Data
-
-### Load From Pandas
-
-```json
-{
-  "tool": "load_data_source",
   "arguments": {
-    "config": {
-      "type": "pandas",
-      "data": {"date": ["2020-01-01"], "sales": [100]},
-      "time_column": "date",
-      "target_column": "sales"
-    }
+    "estimator_handle": "est_id_from_step_2",
+    "dataset": "airline",
+    "horizon": 12
   }
 }
 ```
 
-### Load From CSV
+### 2. Advanced Pipeline Composition
+
+Create sophisticated pipelines without writing complex code.
+
+**Step 1: Validate Pipeline**
+Check if components work together (e.g., Deseasonalizer -> Detrender -> ARIMA).
+```json
+{
+  "tool": "validate_pipeline",
+  "arguments": {"components": ["ConditionalDeseasonalizer", "Detrender", "ARIMA"]}
+}
+```
+
+**Step 2: Instantiate Pipeline**
+```json
+{
+  "tool": "instantiate_pipeline",
+  "arguments": {
+    "components": ["ConditionalDeseasonalizer", "Detrender", "ARIMA"],
+    "params_list": [{}, {}, {"order": [1, 1, 1]}]
+  }
+}
+```
+
+---
+
+## 💾 Data Management
+
+Bring your own data into the MCP server.
+
+### Supported Sources
+
+*   **Pandas DataFrame** (via code injection)
+*   **Local Files**: CSV, Parquet, Excel
+*   **SQL Databases**: PostgreSQL, SQLite, etc.
+
+### Example: Loading a CSV File
 
 ```json
 {
@@ -140,74 +130,69 @@ Data formatting:
   "arguments": {
     "config": {
       "type": "file",
-      "path": "/path/to/data.csv",
-      "time_column": "date",
-      "target_column": "sales"
+      "path": "/absolute/path/to/your/data.csv",
+      "time_column": "timestamp",
+      "target_column": "value"
     }
   }
 }
 ```
 
-### Load From SQL
+!!! warning "Absolute Paths Required"
+    The server requires **absolute file paths** (e.g., `/home/user/data.csv`). Relative paths may fail depending on where the server was started.
 
-```json
-{
-  "tool": "load_data_source",
-  "arguments": {
-    "config": {
-      "type": "sql",
-      "connection_string": "postgresql://user:pass@host:5432/db",
-      "query": "SELECT date, sales FROM sales",
-      "time_column": "date",
-      "target_column": "sales"
-    }
-  }
-}
-```
+---
 
-### Fit And Predict With Custom Data
+## 💡 Best Practices
 
-```json
-{
-  "tool": "fit_predict_with_data",
-  "arguments": {"estimator_handle": "est_abc123", "data_handle": "data_xyz789", "horizon": 7}
-}
-```
+- **Resource Management**: Explicitly release handles (`release_handle`, `release_data_handle`) when done to free up memory.
+- **Reproducibility**: Always use `export_code` after a successful experiment to save your work.
+- **Data Hygiene**: Use `auto_format_on_load` for messy real-world data to avoid frequent validation errors.
 
-### Auto-Format and Data Cleaning
+---
 
-If you see validation warnings (missing values, irregular frequency), use:
+## ⚠️ Known Limitations
 
-```json
-{
-  "tool": "format_time_series",
-  "arguments": {"data_handle": "data_xyz789", "auto_infer_freq": true, "fill_missing": true}
-}
-```
+While `sktime-mcp` is a powerful tool for prototyping, please be aware of the current architectural limitations.
 
-You can also enable auto-formatting on every load:
+#### 1. In-Memory "Amnesia" (No Persistence)
+The server stores state in standard Python dictionaries.
+> **Impact**: If the server restarts or connection drops, all loaded data and trained models are lost. There is no disk-backed checkpointing.
 
-```json
-{"tool": "auto_format_on_load", "arguments": {"enabled": true}}
-```
+#### 2. Synchronous Execution (GIL Blocking)
+Heavy operations (like `AutoARIMA` fitting) run on the main thread.
+> **Impact**: The server will not respond to other requests (like "hello") until the fitting operation completes.
 
-## Continuous Usage Patterns
+#### 3. "The Data Wall" (Memory Limits)
+Data Adapters read the entire dataset into RAM.
+> **Impact**: Loading multi-gigabyte files may crash the server with an `OutOfMemory` error. Lazy loading is not yet supported.
 
-When running as a long-lived MCP service:
+#### 4. Security
+Instantiation allows arbitrary parameters within the registry.
+> **Impact**: While constrained to valid estimators, there is limited validation on parameter values, which could theoretically be misused.
 
-- Keep one or a few estimator handles for repeated runs
-- Release unused handles to avoid memory growth
-- Keep data handles for active datasets only
-- Use `export_code` to persist a successful configuration outside of the LLM session
+#### 5. Rigid Data Formatting
+The `auto_format` logic is heuristic-based.
+> **Impact**: Complex time-series with irregular gaps or mixed frequencies might fail to auto-format correctly, requiring manual pre-processing outside the tool.
 
-Handle lifecycle:
+#### 6. Local-Only Filesystem
+> **Impact**: The server cannot easily access files if running in an isolated Docker container unless volumes are mounted. It does not support "Upload over HTTP/MCP".
 
-- `list_handles` and `release_handle` for estimators
-- `list_data_handles` and `release_data_handle` for data
+#### 7. JSON Serialization Loss
+Complex sktime types (Periods, Intervals) are converted to strings for LLM consumption.
+> **Impact**: Some rich metadata is lost during the conversion to JSON for the client response.
 
-## Common Errors And Fixes
+#### 8. Code Export Limitations
+`export_code` uses template-based generation.
+> **Impact**: Highly complex custom pipelines with lambda functions or specific edge-cases might generate code that requires minor manual fixes.
 
-- `Unknown estimator`: use `search_estimators` or `list_estimators`
-- `Unknown dataset`: use `list_datasets`
-- Missing SQL or file modules: install `.[sql]` or `.[files]`
-- Validation warnings: use `format_time_series` or `auto_format_on_load`
+---
+
+## ❓ Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **"Unknown estimator"** | Use `search_estimators` to find the exact case-sensitive name. |
+| **"Missing dependencies"** | Run `pip install -e ".[all]"` to ensure all extras are present. |
+| **Validation Failures** | Enable `auto_format_on_load` or use `format_time_series` to clean your data. |
+| **Server Timeout** | Heavy models take time. Be patient or try a simpler model (e.g., `NaiveForecaster`) first. |

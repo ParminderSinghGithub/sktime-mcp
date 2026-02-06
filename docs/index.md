@@ -1,163 +1,90 @@
-# sktime-mcp Documentation
+# sktime-mcp
 
-sktime-mcp is a Model Context Protocol (MCP) server that exposes sktime's time-series estimators to LLM clients. It provides discovery, composition, and execution tools so an LLM can find the right estimator, validate pipelines, and run real forecasts on real data.
+<div class="hero-text">
+  <h1>The Semantic Engine for Time-Series</h1>
+  <p style="font-size: 1.2rem; margin-bottom: 2rem;">
+    Empower Large Language Models to discover, reason about, and execute 
+    sktime's advanced forecasting algorithms on real-world data.
+  </p>
+</div>
 
-## What You Can Do
+!!! success "Why sktime-mcp?"
+    Bridging the gap between **LLM reasoning** and **time-series precision**. 
+    Instead of hallucinating Python code, your agent interacts with a strictly typed, 
+    safe, and stateful API to perform complex forecasting tasks.
 
-- Discover estimators by task and tags
-- Inspect estimator capabilities and hyperparameters
-- Instantiate estimators and pipelines
-- Fit and predict on demo datasets or your own data
-- Export Python code for reproducibility
-- Load data from pandas, files, or SQL databases
+---
 
-## Prerequisites
+## 🔥 Key Features
 
-- Python 3.9 or newer
-- pip
-- Optional extras depending on your data sources:
-  - SQL: `.[sql]`
-  - Files (Excel/Parquet): `.[files]`
-  - Forecasting extras: `.[forecasting]`
-  - Deep learning: `.[dl]`
+<div class="grid cards" markdown>
 
-## Install
+-   :material-compass-outline: **Semantic Discovery**
+    ---
+    Find the perfect estimator using semantic similarity and capability tags (e.g., "probabilistic forecaster that handles missing data").
 
-From the repo root:
+-   :material-puzzle-outline: **Safe Composition**
+    ---
+    Build complex pipelines (Transformer → Forecaster) with built-in validation to ensure components are compatible before execution.
 
+-   :material-database-outline: **Universal Data Loading**
+    ---
+    Seamlessly ingest data from **SQL Databases**, **Pandas DataFrames**, **Parquet**, **Excel**, and **CSV** files.
+
+-   :material-flash-outline: **Execution Runtime**
+    ---
+    Stateful execution engine that manages object lifecycles, fitting, and predicting, all via simple JSON-RPC tools.
+
+</div>
+
+---
+
+## ⚡ Quick Start
+
+Get up and running in seconds. Use with **Claude Desktop**, **Cursor**, or any MCP-compatible client.
+
+### 1. Install
 ```bash
-pip install -e .
-```
-
-Common options:
-
-```bash
-# All optional dependencies
 pip install -e ".[all]"
-
-# Development tools
-pip install -e ".[dev]"
 ```
 
-## Start The MCP Server
-
+### 2. Run
 ```bash
-# Entry point
 sktime-mcp
-
-# Or
-python -m sktime_mcp.server
 ```
 
-The server uses stdio transport, which is compatible with MCP clients like Claude Desktop.
-
-## First-Time Use (Quick Walkthrough)
-
-These are the typical first steps a client should take. The examples show tool arguments, which MCP clients send as JSON in tool calls.
-
-1. List demo datasets
-
+### 3. Connect (Claude Desktop Config)
+Add this to your `claude_desktop_config.json`:
 ```json
 {
-  "tool": "list_datasets",
-  "arguments": {}
-}
-```
-
-2. Discover forecasting estimators
-
-```json
-{
-  "tool": "list_estimators",
-  "arguments": {"task": "forecasting", "limit": 10}
-}
-```
-
-3. Inspect a specific estimator
-
-```json
-{
-  "tool": "describe_estimator",
-  "arguments": {"estimator": "NaiveForecaster"}
-}
-```
-
-4. Instantiate an estimator
-
-```json
-{
-  "tool": "instantiate_estimator",
-  "arguments": {
-    "estimator": "NaiveForecaster",
-    "params": {"strategy": "last", "sp": 12}
+  "mcpServers": {
+    "sktime": {
+      "command": "sktime-mcp"
+    }
   }
 }
 ```
 
-5. Fit and predict on a demo dataset
+---
 
-```json
-{
-  "tool": "fit_predict",
-  "arguments": {
-    "estimator_handle": "est_abc123",
-    "dataset": "airline",
-    "horizon": 12
-  }
-}
-```
+## 📚 Documentation Map
 
-6. Export reproducible Python code
+| Section | Description |
+| :--- | :--- |
+| [**User Guide**](user-guide.md) | Comprehensive manual on using tools, workflows, and best practices. |
+| [**Data Sources**](data-sources.md) | Deep dive into loading data from SQL, Files, and Pandas. |
+| [**Architecture**](architecture.md) | High-level system design, data flow, and limitations. |
+| [**Implementation**](implementation.md) | Detailed code walkthrough and file breakdown. |
+| [**Developer Guide**](dev-guide.md) | Contributing guidelines, testing, and extending the server. |
 
-```json
-{
-  "tool": "export_code",
-  "arguments": {"handle": "est_abc123", "var_name": "model"}
-}
-```
+---
 
-## Continuous Use Patterns
+## 🚀 Example Workflow
 
-When you keep the server running as a long-lived MCP service, you will usually:
+1.  **Discover**: "Find me a model that handles missing data."
+2.  **Load**: "Load `sales_data.csv`."
+3.  **Train**: "Fit an AutoARIMA model on the data."
+4.  **Predict**: "Forecast the next 12 months."
+5.  **Export**: "Give me the Python code to reproduce this."
 
-- Reuse estimator handles for repeated forecasting runs
-- Release estimator and data handles to avoid memory growth
-- Use `auto_format_on_load` for stable ingestion of messy data
-- Export code after a successful workflow to make results reproducible
-
-Handle management tools:
-
-- `list_handles` and `release_handle` for estimator lifecycle
-- `list_data_handles` and `release_data_handle` for data lifecycle
-
-## Examples
-
-The `examples/` directory provides runnable scripts that showcase different workflows:
-
-- `examples/01_forecasting_workflow.py` (full discovery → fit → predict)
-- `examples/03_pipeline_instantiation.py` (pipeline construction)
-- `examples/04_mcp_pipeline_demo.py` (MCP-style pipeline flow)
-- `examples/pandas_example.py`, `examples/csv_example.py`, `examples/sql_example.py`
-
-Run any example from the repo root:
-
-```bash
-python examples/01_forecasting_workflow.py
-```
-
-## Troubleshooting
-
-- Missing SQL or file dependencies:
-
-```bash
-pip install -e ".[sql]"
-pip install -e ".[files]"
-```
-
-- Unknown estimator or dataset:
-  - Use `list_estimators` or `list_datasets` to discover valid names
-
-- Data validation warnings:
-  - Use `format_time_series` or enable `auto_format_on_load`
-
-For detailed usage, continue to the User Guide.
+[Get Started Now](user-guide.md){ .md-button .md-button--primary }

@@ -144,7 +144,7 @@ Here are some standalone examples of using specific tools.
 **Search by Name**
 ```json
 {
-  "name": "search_estimators",
+  "name": "list_estimators",
   "arguments": {
     "query": "ARIMA",
     "limit": 5

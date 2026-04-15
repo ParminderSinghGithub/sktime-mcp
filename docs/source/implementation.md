@@ -134,7 +134,7 @@ LLM → JSON-RPC request → server.call_tool() → tool function → sanitize �
    - **Key Methods**:
      - `get_all_estimators(task, tags)`: Filter estimators by task and tags
      - `get_estimator_by_name(name)`: Lookup specific estimator
-     - `search_estimators(query)`: Text search in names/docstrings
+       - `list_estimators(query=...)`: MCP discovery search mode for names/docstrings
      - `get_available_tasks()`: List all task types
      - `get_available_tags()`: List all capability tags
    - **Internal Methods**:
@@ -319,9 +319,9 @@ Each file implements one or more MCP tools that LLMs can call.
    - Calls `registry.get_all_estimators(task, tags)`
    - Returns: `{"success": True, "estimators": [...], "total": 50}`
 
-2. **`search_estimators_tool(query, limit)`**
-   - Calls `registry.search_estimators(query)`
-   - Text search in estimator names/docstrings
+2. **`list_estimators_tool(query=..., task=..., tags=..., limit=..., offset=...)`**
+   - Performs text matching on estimator name/docstring when `query` is provided
+   - Combines text search with task/tag filters in one tool
 
 3. **`get_available_tags()`**
    - Returns all capability tags

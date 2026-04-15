@@ -20,7 +20,7 @@ import sys
 sys.path.insert(0, "src")
 
 from sktime_mcp.composition.validator import get_composition_validator
-from sktime_mcp.tools.describe_estimator import describe_estimator_tool, search_estimators_tool
+from sktime_mcp.tools.describe_estimator import describe_estimator_tool
 from sktime_mcp.tools.fit_predict import fit_predict_tool
 from sktime_mcp.tools.instantiate import instantiate_estimator_tool
 from sktime_mcp.tools.list_estimators import list_estimators_tool
@@ -205,15 +205,20 @@ def simulate_query_4():
     # Step 1: Search
     print_llm_thought("Searching for 'exponential' in estimator names and docs...")
 
-    print_tool_call("search_estimators", {"query": "exponential", "limit": 5})
-    result = search_estimators_tool("exponential", limit=5)
-    print_result(result)
+    print_tool_call("list_estimators", {"query": "exponential", "limit": 5})
+    result = list_estimators_tool(query="exponential", limit=5)
+    search_view = {
+        "success": result.get("success", False),
+        "results": result.get("estimators", []),
+        "count": result.get("count", 0),
+    }
+    print_result(search_view)
 
     # Step 2: Generate response
     print("\n🤖 LLM Response:")
-    if result["success"] and result["results"]:
-        print(f"   Found {result['count']} estimators related to exponential smoothing:")
-        for est in result["results"]:
+    if search_view["success"] and search_view["results"]:
+        print(f"   Found {search_view['count']} estimators related to exponential smoothing:")
+        for est in search_view["results"]:
             print(f"   - {est['name']} ({est['task']})")
     else:
         print("   No estimators found matching 'exponential'")

@@ -93,7 +93,7 @@ sktime-mcp is a **Model Context Protocol (MCP) server** that wraps the [sktime](
 | Principle | Implementation |
 |-----------|---------------|
 | **sktime as single source of truth** | Registry loads all estimators from `sktime.registry.all_estimators()` at runtime; no hardcoded estimator lists. |
-| **Registry-first discovery** | LLMs discover estimators via `list_estimators` / `search_estimators` / `describe_estimator` before using them. |
+| **Registry-first discovery** | LLMs discover estimators via `list_estimators` (including `query`) and `describe_estimator` before using them. |
 | **Handle-based state** | Estimators and data are referenced by opaque `est_*` / `data_*` handle strings, not serialized objects. |
 | **Lazy loading** | Registry, tag resolver, and executor are singletons initialized on first access. |
 | **Fail-safe responses** | Every tool returns `{"success": bool, ...}` — never bare exceptions over the wire. |
@@ -159,7 +159,7 @@ Each module contains one or more tool functions. Tools are thin wrappers that va
 | Module | Tools Defined | MCP-Registered |
 |--------|--------------|----------------|
 | `list_estimators.py` | `list_estimators_tool`, `get_available_tags`, `get_available_tasks` | `list_estimators`, `get_available_tags` |
-| `describe_estimator.py` | `describe_estimator_tool`, `search_estimators_tool` | `describe_estimator`, `search_estimators` |
+| `describe_estimator.py` | `describe_estimator_tool` | `describe_estimator` |
 | `instantiate.py` | `instantiate_estimator_tool`, `instantiate_pipeline_tool`, `list_handles_tool`, `release_handle_tool`, `load_model_tool` | All 5 |
 | `fit_predict.py` | `fit_predict_tool`, `fit_predict_async_tool`, `fit_tool`, `predict_tool`, `list_datasets_tool` | `fit_predict`, `fit_predict_async` |
 | `evaluate.py` | `evaluate_estimator_tool` | `evaluate_estimator` |
@@ -272,9 +272,8 @@ All 28 MCP-registered tools, categorized:
 ### Discovery Tools (4)
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `list_estimators` | List estimators by task/tags | `task?`, `tags?`, `limit?` (default 50) |
+| `list_estimators` | List/search estimators by task/tags/query | `task?`, `tags?`, `query?`, `limit?` (default 50), `offset?` (default 0) |
 | `describe_estimator` | Full metadata for one estimator | `estimator` (required) |
-| `search_estimators` | Substring search on name/docstring | `query` (required), `limit?` (default 20) |
 | `get_available_tags` | Tag catalog with descriptions | (none) |
 
 ### Instantiation Tools (5)
@@ -890,7 +889,7 @@ class SQLAdapter(DataSourceAdapter):
 | `server.py` | 742 | MCP server: tool registration, dispatch, serialization |
 | `tools/__init__.py` | ~20 | Re-exports subset of tools |
 | `tools/list_estimators.py` | ~80 | `list_estimators_tool`, `get_available_tags`, `get_available_tasks` |
-| `tools/describe_estimator.py` | ~120 | `describe_estimator_tool`, `search_estimators_tool` |
+| `tools/describe_estimator.py` | ~120 | `describe_estimator_tool` |
 | `tools/instantiate.py` | ~300 | Estimator/pipeline instantiation, handle management, model loading |
 | `tools/fit_predict.py` | ~120 | `fit_predict_tool`, `fit_predict_async_tool` |
 | `tools/evaluate.py` | ~74 | `evaluate_estimator_tool` |

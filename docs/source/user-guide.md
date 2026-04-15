@@ -50,7 +50,7 @@ The `sktime-mcp` server exposes a suite of tools designed for Large Language Mod
 
 | Category | Tools | Description |
 |----------|-------|-------------|
-| **Discovery** | `list_estimators`, `search_estimators`, `describe_estimator` | Find the right model for your task (Forecasting, Classification, etc.). |
+| **Discovery** | `list_estimators` (with `query`), `describe_estimator` | Find the right model for your task (Forecasting, Classification, etc.). |
 | **Instantiation** | `instantiate_estimator`, `instantiate_pipeline` | Create model instances or complex pipelines. |
 | **Execution** | `fit_predict`, `fit_predict_async`, `fit_predict_with_data` | Train models and generate forecasts on demo or user data. |
 | **Data** | `load_data_source`, `list_available_data` | Load data from Pandas, CSV/Parquet, or SQL, and inspect demo datasets plus active handles. |
@@ -248,7 +248,7 @@ Complex sktime types (Periods, Intervals) are converted to strings for LLM consu
 
 | Issue | Solution |
 |-------|----------|
-| **"Unknown estimator"** | Use `search_estimators` to find the exact case-sensitive name. |
+| **"Unknown estimator"** | Use `list_estimators` with `query` to find the exact estimator name. |
 | **`No module named 'sktime'` / `sktime must be installed`** | Activate your project virtual environment and reinstall: `pip install -e ".[dev]"` (or `pip install -e ".[all]"` if you need optional adapters). |
 | **"Missing dependencies"** | Run `pip install -e ".[all]"` to ensure optional extras are present. |
 | **`save_model` import/runtime errors** | Install MLflow in the environment used by the server. The tool relies on `sktime.utils.mlflow_sktime.save_model` and saves to a local filesystem path. |

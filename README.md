@@ -158,12 +158,13 @@ Discover estimators by task type and capability tags.
 
 ---
 
-#### 2. `search_estimators`
-Search estimators by name or description using text query.
+#### 2. `list_estimators` (query mode)
+Search estimators by name or description using `query`.
 
 **Arguments:**
 - `query` (required): Search string (case-insensitive)
-- `limit` (optional): Maximum results (default: 20)
+- `limit` (optional): Maximum results (default: 50)
+- `offset` (optional): Pagination offset (default: 0)
 
 **Example:**
 ```json

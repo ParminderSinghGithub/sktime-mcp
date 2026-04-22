@@ -618,11 +618,6 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         elif name == "release_handle":
             result = release_handle_tool(arguments["handle"])
 
-        elif name == "validate_pipeline":
-            validator = get_composition_validator()
-            validation = validator.validate_pipeline(arguments["components"])
-            result = validation.to_dict()
-
         # -- Execution -------------------------------------------------------
         elif name == "fit_predict":
             result = fit_predict_tool(
@@ -657,6 +652,13 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 arguments.get("cv_folds", 3),
             )
             result = sanitize_for_json(result)
+
+        elif name == "validate_pipeline":
+            validator = get_composition_validator()
+            validation = validator.validate_pipeline(arguments["components"])
+            result = validation.to_dict()
+            result["success"] = result["valid"]
+
 
         # -- Data ------------------------------------------------------------
         elif name == "list_available_data":
@@ -750,7 +752,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         return [TextContent(type="text", text=json.dumps(sanitized_result, indent=2, default=str))]
     except Exception as e:
         logger.exception(f"Error in tool {name}")
-        return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+        return [TextContent(type="text", text=json.dumps({"success": False, "error": str(e)}))]
 
 
 # ===================================================================

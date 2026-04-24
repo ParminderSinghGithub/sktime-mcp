@@ -18,7 +18,6 @@ from mcp.types import TextContent, Tool
 from sktime_mcp.composition.validator import get_composition_validator
 from sktime_mcp.tools.codegen import export_code_tool
 from sktime_mcp.tools.data_tools import (
-    fit_predict_with_data_tool,
     load_data_source_async_tool,
     load_data_source_tool,
     release_data_handle_tool,
@@ -88,6 +87,7 @@ def sanitize_for_json(obj):
 #   3. cleanup_old_jobs    -> automatic periodic timer
 #   4. delete_job          -> merged into cancel_job(delete=True)
 #   5. search_estimators   -> merged into list_estimators(query=...)
+#   6. fit_predict_with_data -> removed; use fit_predict(data_handle=...)
 # ===================================================================
 
 
@@ -243,8 +243,9 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="fit_predict",
             description=(
-                "Fit an estimator on a dataset and generate predictions. "
-                "Accepts either a demo dataset name or a data_handle from load_data_source."
+                "Fit an estimator and generate predictions. "
+                "Provide exactly one of: dataset (demo name such as airline, sunspots) "
+                "or data_handle (from load_data_source for custom data)."
             ),
             inputSchema={
                 "type": "object",
@@ -635,16 +636,6 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 arguments.get("horizon", 12),
             )
 
-        elif name == "fit_predict_with_data":
-            # Deprecated — kept for backward compatibility
-            logger.warning("fit_predict_with_data is deprecated; use fit_predict(data_handle=...)")
-            result = fit_predict_with_data_tool(
-                arguments["estimator_handle"],
-                arguments["data_handle"],
-                arguments.get("horizon", 12),
-            )
-            result = sanitize_for_json(result)
-
         elif name == "evaluate_estimator":
             result = evaluate_estimator_tool(
                 arguments["estimator_handle"],
@@ -672,8 +663,11 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
 
         elif name == "list_data_sources":
             # Deprecated — info is now in load_data_source description
-            logger.warning("list_data_sources is deprecated; info is in load_data_source description")
+            logger.warning(
+                "list_data_sources is deprecated; info is in load_data_source description"
+            )
             from sktime_mcp.tools.data_tools import list_data_sources_tool
+
             result = list_data_sources_tool()
 
         elif name == "release_data_handle":
@@ -693,6 +687,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 "auto_format_on_load is deprecated; use env var SKTIME_MCP_AUTO_FORMAT=true/false"
             )
             from sktime_mcp.tools.format_tools import auto_format_on_load_tool
+
             result = auto_format_on_load_tool(arguments.get("enabled", True))
 
         # -- Export / Persistence --------------------------------------------
@@ -739,6 +734,7 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             # Deprecated — now runs automatically on a periodic timer
             logger.warning("cleanup_old_jobs is deprecated; jobs are cleaned up automatically")
             from sktime_mcp.tools.job_tools import cleanup_old_jobs_tool
+
             result = cleanup_old_jobs_tool(arguments.get("max_age_hours", 24))
 
         else:
